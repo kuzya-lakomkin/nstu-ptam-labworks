@@ -84,36 +84,6 @@ def parse_buffer(buff: str) -> float:
         TokenParsingState.MANTISS: [1, 0], TokenParsingState.EXPONENT: [1, 0]
     }
     curr_state = TokenParsingState.MANTISS
-
-    '''
-    for i in range(len(buff)):
-        if (buff[i] in " \t"):
-            if (is_empty):
-                continue
-            raise ValueError("input does not fit the expected format")
-        if buff[i] in '0123456789':
-            curr += buff[i]
-            not_digits["e"] = True
-            not_digits["-"] = False
-        elif (buff[i] not in ALLOWED_NAN_SYMBOLS) or (len(curr) == 0):
-                raise ValueError("input does not fit the expected format")
-        
-        if (buff[i] == 'e'):
-            if not_digits["e"]:
-                not_digits["e"] = False
-                not_digits["-"] = True
-                curr_state = 3
-
-        if(buff[i] == '.'):
-            if not_digits["."]:
-                is_empty = False
-                not_digits["."] = False
-                parse_fract(buff, i)
-                buff += '.'
-                continue
-            raise ValueError("input does not fit the expected format")
-        
-        '''
     
     i = 0
     space_allowed = True
@@ -123,37 +93,118 @@ def parse_buffer(buff: str) -> float:
             i += 1
             continue
 
-        if (buff[i] in '0123456789'):
+        if (buff[i] >= '0') and (buff[i] <= '9'):
             res *= 10
             res += ord(buff[i]) - ord('0')
             space_allowed = False
-        
 
-def parse_fract(buff: str, index: int) -> tuple:
-    if (index >= buff):
-        raise ValueError("index out of range")
+
+def _skip_spaces(buff: str, idx: int) -> int:
+    if (idx < 0) or (idx >= len(buff)):
+        raise IndexError("idx out of range")
+    
+    while (idx < len(buff)) and buff[idx] in ' \t':
+        idx += 1
+
+    return idx
+
+
+def _parse_numeric_part(buff: str, idx: int) -> tuple:
+    try:
+        idx = _skip_spaces(buff, idx)
+    except IndexError:
+        raise IndexError("idx out of range")
+    
+    if (idx < 0) or (idx >= len(buff)):
+        print(idx)
+        raise IndexError("idx out of range")
+    
+    start_idx = idx
+
+    is_neg = buff[idx] == '-'
+    num, sign = 0, -1 * is_neg
+    idx += is_neg
+
+    int_part, idx = _parse_digits(buff, idx)
+    res = int_part
+
+    if (idx >= len(buff)):
+        return (num, idx)
+
+    if (idx < len(buff)) and (buff[idx] not in ' \tKCF'):
+        raise ValueError("incorrect input format")
+
+    if (buff[idx] == '.'):
+        idx += 1
+        fract_part = 0.0
+        try:
+            fract_part, idx = _parse_fract(buff, idx)
+        except IndexError:
+            raise IndexError("index out of range!")
+
+        if (idx < len(buff)) and (buff[idx] not in ' \tKCF'):
+            raise ValueError("incorrect input format")
+        return (num * sign + fract_part, idx)
+    
+    if (buff[idx] == 'e'):
+        idx += 1
+        exp = 0
+        try:
+            exp, idx = _parse_exp(buff, idx)
+        except IndexError:
+            raise IndexError("index out of range")
+        
+        if (idx < len(buff)) and (buff[idx] not in ' \tKCF'):
+            raise ValueError("incorrect input format")
+        return (num * (10 ** exp), idx)
+    
+    if (idx < len(buff)) and (buff[idx] not in ' \tKCF'):
+        raise ValueError("incorrect input format")
+
+
+def _parse_digits(buff: str, idx: int) -> tuple:
+    if (idx < 0) or (idx >= len(buff)):
+        raise IndexError("idx out of range")
+    
+    res = 0
+
+    while (idx < len(buff)) and (buff[idx] >= '0') and (buff[idx] <= '9'):
+        res *= 10
+        res += ord(buff[idx]) - ord('0')
+        idx += 1
+    
+    return (res, idx)
+
+
+def _parse_fract(buff: str, idx: int) -> tuple:
+    if (idx < 0) or (idx >= len(buff)):
+        raise IndexError("idx out of range")
     
     val, degree = 0, 0
 
-    while buff[index] in '0123456789':
+    while (idx < len(buff)) and (buff[idx] >= '0') and (buff[idx] <= '9'):
         degree -= 1
         val *= 10
-        val += ord(buff[index]) - ord('0')
-        index += 1
+        val += ord(buff[idx]) - ord('0')
+        idx += 1
     
-    return (val * (10 ** degree), index)
+    return (val * (10 ** degree), idx)
 
 
-def parse_exp(buff: str, index: int) -> tuple:
-    if (index >= buff):
-        raise ValueError("index out of range")
+def _parse_exp(buff: str, idx: int) -> tuple:
+    if (idx < 0) or (idx >= len(buff)):
+        raise IndexError("idx out of range")
     
-    exp, sign = 0, -1 * buff[index] == '-'
-    index += 1
+    exp, sign = 0, -1 * buff[idx] == '-'
+    idx += 1
 
-    while buff[index] in '0123456789':
+    while (idx < len(buff)) and (buff[idx] >= '0') and (buff[idx] <= '9'):
         exp *= 10
-        exp += ord(buff[index]) - ord('0')
-        index += 1
+        exp += ord(buff[idx]) - ord('0')
+        idx += 1
 
-    return (exp * sign, index)
+    return (exp * sign, idx)
+
+
+if __name__ == '__main__':
+    print(_parse_numeric_part(input(), 0))
