@@ -118,23 +118,24 @@ def _parse_numeric_part(buff: str, idx: int) -> tuple:
     if (idx < 0) or (idx >= len(buff)):
         print(idx)
         raise IndexError("idx out of range")
-    
-    start_idx = idx
 
     is_neg = buff[idx] == '-'
-    num, sign = 0, -1 * is_neg
+    num, sign = 0, 1 - 2 * is_neg
     idx += is_neg
 
+    idx_tmp = idx
+
     int_part, idx = _parse_digits(buff, idx)
-    res = int_part
+    num += int_part
+    is_e_allowed = idx != idx_tmp
 
     if (idx >= len(buff)):
         return (num, idx)
 
-    if (idx < len(buff)) and (buff[idx] not in ' \tKCF'):
+    if (idx < len(buff)) and (buff[idx] not in ALLOWED_NAN_SYMBOLS):
         raise ValueError("incorrect input format")
 
-    if (buff[idx] == '.'):
+    if buff[idx] == '.':
         idx += 1
         fract_part = 0.0
         try:
@@ -147,6 +148,8 @@ def _parse_numeric_part(buff: str, idx: int) -> tuple:
         return (num * sign + fract_part, idx)
     
     if (buff[idx] == 'e'):
+        if not is_e_allowed:
+            raise ValueError("incorrect input format")
         idx += 1
         exp = 0
         try:
@@ -195,8 +198,9 @@ def _parse_exp(buff: str, idx: int) -> tuple:
     if (idx < 0) or (idx >= len(buff)):
         raise IndexError("idx out of range")
     
-    exp, sign = 0, -1 * buff[idx] == '-'
-    idx += 1
+    is_neg = buff[idx] == '-'
+    exp, sign = 0, 1 - 2 * is_neg
+    idx += is_neg
 
     while (idx < len(buff)) and (buff[idx] >= '0') and (buff[idx] <= '9'):
         exp *= 10
@@ -207,4 +211,7 @@ def _parse_exp(buff: str, idx: int) -> tuple:
 
 
 if __name__ == '__main__':
-    print(_parse_numeric_part(input(), 0))
+    try:
+        print(_parse_numeric_part('1e-10', 0))
+    except IndexError:
+        print("error!!!s")
