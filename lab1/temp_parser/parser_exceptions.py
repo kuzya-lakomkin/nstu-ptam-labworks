@@ -1,0 +1,2 @@
+class ReadingBufferException(Exception):
+    pass
