@@ -14,6 +14,14 @@ class ParseState(ABC):
         pass
 
 
+class StartState(ParseState):
+    def __init__(self, context):
+        super().__init__(context)
+    
+    def parse(self):
+        return ReadBuffState(self._context)
+
+
 class ReadBuffState(ParseState):
     def __init__(self, context):
         super().__init__(context)
@@ -24,6 +32,9 @@ class ReadBuffState(ParseState):
         except:
             raise ReadingBufferException("failed to read CLI input.")
         
+        if (len(self._context._buff) == 0):
+            return FinalState(self._context)
+
         return SkipSpacesState(self._context)
     
 
@@ -40,7 +51,7 @@ class SkipSpacesState(ParseState):
               (self._context.get_last_sym() in ' \t'):
             self._context.incr_idx()
         
-        if (self._context.get_idx() < self._context.buff_len()):
+        if (self._context.get_idx() >= self._context.buff_len()):
             return
         
         return ReadIntSignState(self._context)
@@ -55,11 +66,6 @@ class ReadIntSignState(ParseState):
     def parse(self) -> ParseState:
         if (self._context.is_buffer_empty()):
             return
-        
-        try:
-            self._sign -= 2 * self._context.get_last_sym()
-        except:
-            return # TODO: make exception or transition!!!!!
 
         if (self._context.get_last_sym() == '-'):
             self._context.set_int_sign(-1)
@@ -78,9 +84,83 @@ class ReadIntPartState(ParseState):
         
         while (self._context.get_idx() < self._context.buff_len()) and \
               (0 <= ord(self._context.get_last_sym()) - ord('0') <= 9):
-            self._context.incr_int_part(ord(self._context()) - ord('0'))
+            self._context.incr_int_part(ord(self._context.get_last_sym()) - ord('0'))
             self._context.incr_idx()
 
+        if (self._context.get_idx() < self._context.buff_len()):
+            return ReadAfterIntState(self._context)
+        
+        return FinalState(self._context)
+    
+
+class ReadAfterIntState(ParseState):
+    def __init__(self, context):
+        super().__init__(context)
+    
+    def parse(self):
+        if (self._context.is_buffer_empty()):
+            return # TODO: !!!!!!!!!!!!
+        
+        if self._context.get_last_sym() == '.':
+            self._context.incr_idx()
+            return ReadFractPartState(self._context)
+        
+        if self._context.get_last_sym() == 'e':
+            self._context.incr_idx()
+            return ReadExpSignState(self._context)
+
+
+class ReadFractPartState(ParseState):
+    def __init__(self, context):
+        super().__init__(context)
+
+    def parse(self):
+        if (self._context.buff_len() <= self._context.get_idx()):
+            return # TODO: !!!!!!!!!!!!!!
+        
+        self._context.set_exp_sign(-1)
+
+        while (self._context.get_idx() < self._context.buff_len()) and \
+              (0 <= ord(self._context.get_last_sym()) - ord('0') <= 9):
+            self._context.incr_int_part(ord(self._context.get_last_sym()) - ord('0'))
+            self._context.scale_exp(10)
+            self._context.incr_idx()
+        
+        return FinalState(self._context) # TODO: !!!!!!!!!!!!!!!!!!!!!
+
+
+class ReadExpSignState(ParseState):
+    def __init__(self, context):
+        super().__init__(context)
+
+    def parse(self):
+        if (self._context.buff_len() <= self._context.get_idx()):
+            return # TODO: !!!!!!!!!!!!!!
+        
+        if (self._context.get_last_sym() == '-'):
+            print("!!!!!!!!!!")
+            self._context.set_exp_sign(-1)
+            self._context.incr_idx()
+        
+        return ReadExpPartState(self._context)
+
+        
+class ReadExpPartState(ParseState):
+    def __init__(self, context):
+        super().__init__(context)
+
+    def parse(self):
+        if (self._context.buff_len() <= self._context.get_idx()):
+            return # TODO: !!!!!!!!!!!!!!
+    
+        self._context.set_exp(0)
+
+        while (self._context.get_idx() < self._context.buff_len()) and \
+                (0 <= ord(self._context.get_last_sym()) - ord('0') <= 9):
+            self._context.incr_exp(ord(self._context.get_last_sym()) - ord('0'))
+            print(self._context._exp_part)
+            self._context.incr_idx() 
+        
         return FinalState(self._context)
 
 
@@ -89,4 +169,5 @@ class FinalState(ParseState):
         super().__init__(context)
 
     def parse(self):
-        return
+        self._context._is_finished = True
+        return StartState(self._context)

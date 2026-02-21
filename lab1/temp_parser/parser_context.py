@@ -8,7 +8,7 @@ class ParseContext:
         self._int_sign = 1
         self._int_part = 0.0
         self._exp_sign = 1
-        self._exp_part = 0.0
+        self._exp_part = 1
         self._is_finished = False
 
     def set_buffer(self, buff: str) -> None:
@@ -23,11 +23,31 @@ class ParseContext:
     def get_idx(self) -> int:
         return self._idx
     
+    def get_num(self) -> float:
+        print(self._exp_part, self._exp_sign)
+        return self._int_sign * self._int_part * (10 ** (self._exp_part * self._exp_sign))  
+    
     def reset_idx(self) -> int:
         self.idx = 0
 
     def is_finished(self) -> bool:
         return self._is_finished
+    
+    def incr_exp(self, delta: int) -> None:
+        self._exp_part *= 10
+        self._exp_part += delta
+
+    def scale_exp(self, alpha: int) -> None:
+        self._exp_part *= alpha
+
+    def set_exp(self, val: int) -> None:
+        self._exp_part = val
+
+    def set_exp_sign(self, sign: int) -> None:
+        if (sign != 1) and (sign != -1):
+            return # TODO !!!!!!!!!!!!!!!!
+        
+        self._exp_sign = sign
 
     # TODO: make exception
     def set_int_sign(self, sign) -> None:
@@ -37,9 +57,9 @@ class ParseContext:
 
     # TODO: make excpetion
     def incr_idx(self, delta: int = 1) -> int:
-        if (self.idx + delta > len(self._buff)):
+        if (self._idx + delta > len(self._buff)):
             return # TODO: !!!!!!!!!!!!!!!!!!!!!
-        self.idx += delta
+        self._idx += delta
         return self._idx
     
     # TODO: make excpetion
