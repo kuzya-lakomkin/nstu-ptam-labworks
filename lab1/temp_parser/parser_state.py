@@ -54,7 +54,10 @@ class SkipSpacesState(ParseState):
         if (self._context.get_idx() >= self._context.buff_len()):
             return
         
-        return ReadIntSignState(self._context)
+        if (self._context.is_numpart_empty()):
+            return ReadIntSignState(self._context)
+
+        return ReadUMState(self._context)
 
 
 class ReadIntSignState(ParseState):
@@ -70,6 +73,8 @@ class ReadIntSignState(ParseState):
         if (self._context.get_last_sym() == '-'):
             self._context.set_int_sign(-1)
             self._context.incr_idx()
+
+        self._context.set_numpart_flag(False)
 
         return ReadIntPartState(self._context)
     
@@ -90,7 +95,7 @@ class ReadIntPartState(ParseState):
         if (self._context.get_idx() < self._context.buff_len()):
             return ReadAfterIntState(self._context)
         
-        return FinalState(self._context)
+        return SkipSpacesState(self._context)
     
 
 class ReadAfterIntState(ParseState):
@@ -119,14 +124,15 @@ class ReadFractPartState(ParseState):
             return # TODO: !!!!!!!!!!!!!!
         
         self._context.set_exp_sign(-1)
+        self._context.set_exp(0)
 
         while (self._context.get_idx() < self._context.buff_len()) and \
               (0 <= ord(self._context.get_last_sym()) - ord('0') <= 9):
             self._context.incr_int_part(ord(self._context.get_last_sym()) - ord('0'))
-            self._context.scale_exp(10)
+            self._context.add_to_exp(1)
             self._context.incr_idx()
         
-        return FinalState(self._context) # TODO: !!!!!!!!!!!!!!!!!!!!!
+        return SkipSpacesState(self._context) # TODO: !!!!!!!!!!!!!!!!!!!!!
 
 
 class ReadExpSignState(ParseState):
@@ -161,6 +167,21 @@ class ReadExpPartState(ParseState):
             print(self._context._exp_part)
             self._context.incr_idx() 
         
+        return SkipSpacesState(self._context)
+    
+
+class ReadUMState(ParseState):
+    def __init__(self, context):
+        super().__init__(context)
+    
+    def parse(self):
+        if (self._context.buff_len() <= self._context.get_idx()):
+            return # TODO: !!!!!!!!!!!!!!
+        
+        if self._context.get_last_sym() not in 'KFC':
+            return # TODO: !!!!!!!!!!!!!!!!!!!!!
+        
+        self._context.set_temp_um(self._context.get_last_sym())
         return FinalState(self._context)
 
 
@@ -170,4 +191,5 @@ class FinalState(ParseState):
 
     def parse(self):
         self._context._is_finished = True
+        self._context.set_numpart_flag(True)
         return StartState(self._context)

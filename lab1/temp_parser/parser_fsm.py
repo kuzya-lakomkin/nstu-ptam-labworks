@@ -10,7 +10,7 @@ class ParserFSM:
         while not self._context.is_finished():
             self._curr_state = self._curr_state.parse()
 
-        return self._context.get_num()
+        return self._context.get_temp_val()
     
 
 if __name__ == "__main__":
