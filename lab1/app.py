@@ -10,7 +10,8 @@ def app():
 
 	print(f"\n  ~~~~~~~~~~~~~~ Temperature Parser v{VERSION} ~~~~~~~~~~~~~~  \n\n"
 	   		"Expected input format:\n<float number> [ \"K\" | \"F\" | \"C\" ] ... "\
-            " <float number> [ \"K\" | \"F\" | \"C\" ]\n")
+            " <float number> [ \"K\" | \"F\" | \"C\" ]\n"\
+			"Example: 250 K -10 C 8 F ...\n")
 	print("Enter the temperature list: ")
 	parser = ParserFSM()
 	
