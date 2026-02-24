@@ -41,6 +41,8 @@ class ParseContext:
         self._last_chunk_sym = buff[-1]
         if self._buff[-1] == '\n':
             self._buff = self._buff[:-1]
+        if self._buff[-1] == '\r':
+            self._buff = self._buff[:-1]
         self._chunks_cnt += 1
 
     def chunk_last_sym(self) -> str:

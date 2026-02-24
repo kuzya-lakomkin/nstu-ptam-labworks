@@ -6,7 +6,7 @@ class TempParserException(Exception):
 
 class UnknownSymbolException(TempParserException):
     def __init__(self, sym: str):
-        message = f"unknown symbol: {sym}"
+        message = f"unknown symbol: \"{sym}\"" + (sym == 'С') * '. сheck your keyboard layout :)'
         super().__init__(message)
 
 

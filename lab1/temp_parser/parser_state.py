@@ -173,7 +173,6 @@ class ReadExpSignState(ParseState):
         if (self._context.buff_len() <= self._context.get_idx()):
             return ReadBuffState(self._context, ReadExpSignState)
         
-        print(f"reading exp sign: {self._context.get_last_sym()}")
         if (self._context.get_last_sym() == '-'):
             self._context.set_exp_sign(-1)
             self._context.incr_idx()
@@ -192,7 +191,6 @@ class ReadExpPartState(ParseState):
         self._context.set_exp(0)
 
         start = self._context.get_full_idx()
-        print(f'reading exp: {self._context.get_last_sym()}')
         while (0 <= ord(self._context.get_last_sym()) - ord('0') <= 9):
             
             self._context.incr_exp(ord(self._context.get_last_sym()) - ord('0'))
