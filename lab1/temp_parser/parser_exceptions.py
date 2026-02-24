@@ -11,7 +11,7 @@ class UnknownSymbolException(TempParserException):
 
 
 class WrongFormatException(TempParserException):
-    def __init__(self, details: str = "excpected format:\n[number] [unit_of_measurement] ... "\
+    def __init__(self, details: str = "expected format:\n[number] [unit_of_measurement] ... "\
                                     " [number] [unit_of_measurement]."):
         message = f"wrong input format. {details}"
         super().__init__(message)

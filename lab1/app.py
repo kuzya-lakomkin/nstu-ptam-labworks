@@ -9,7 +9,7 @@ def app():
 	curr_val = (0, None)
 
 	print(f"\n  ~~~~~~~~~~~~~~ Temperature Parser v{VERSION} ~~~~~~~~~~~~~~  \n\n"
-	   		"Input format: excpected format:\n<float number> [ \"K\" | \"F\" | \"C\" ] ... "\
+	   		"Expected input format:\n<float number> [ \"K\" | \"F\" | \"C\" ] ... "\
             " <float number> [ \"K\" | \"F\" | \"C\" ]\n")
 	print("Enter the temperature list: ")
 	parser = ParserFSM()
