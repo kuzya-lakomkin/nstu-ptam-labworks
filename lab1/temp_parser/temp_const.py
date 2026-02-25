@@ -1,3 +1,3 @@
 MIN_TEMP, MAX_TEMP = -90.0, 60
-MAX_BUFFSIZE = 1024
+MAX_BUFFSIZE = 10
 ALLOWED_NAN_SYMBOLS = ['C', 'F', 'K', '.', "e", '-']

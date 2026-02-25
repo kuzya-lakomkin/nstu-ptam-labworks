@@ -8,5 +8,5 @@ def convert_temp(val: tuple) -> float:
     return val[0]
     
 
-def g_float(a: float, b: float, diff: float = 1e-5):
+def g_float(a: float, b: float, diff: float = 1e-350):
     return a - b > diff

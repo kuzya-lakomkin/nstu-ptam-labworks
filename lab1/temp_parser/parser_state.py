@@ -105,11 +105,16 @@ class ReadIntPartState(ParseState):
         if (self._context.buff_len() <= self._context.get_idx()):
             return ReadBuffState(self._context, ReadIntPartState)
 
+        start = self._context.get_full_idx()
+
         while (0 <= ord(self._context.get_last_sym()) - ord('0') <= 9):
             self._context.incr_int_part(ord(self._context.get_last_sym()) - ord('0'))
             self._context.incr_idx()
             if (self._context.buff_len() <= self._context.get_idx()):
                 return ReadBuffState(self._context, ReadIntPartState)
+            
+            if (self._context.get_full_idx() - start) > 10:
+                raise WrongFormatException("too long value.")
 
         if (self._context.get_idx() < self._context.buff_len()):
             return ReadAfterIntState(self._context)
@@ -129,12 +134,14 @@ class ReadAfterIntState(ParseState):
             self._context.set_exp(0)
             self._context.set_exp_sign(-1)
             self._context.incr_idx()
+            self._context.set_long_part_start()
             return ReadFractPartState(self._context)
         
         if self._context.get_last_sym() == 'e':
             if self._context.get_full_idx() == self._context.get_start_idx():
                 raise WrongFormatException("excpected integer part berfore exponent.")
             self._context.incr_idx()
+            self._context.set_long_part_start()
             return ReadExpSignState(self._context)
         
         if (self._context.get_last_sym() == ' ') or (self._context.get_last_sym() == '\t'):
@@ -158,7 +165,11 @@ class ReadFractPartState(ParseState):
             self._context.incr_idx()
             if (self._context.buff_len() <= self._context.get_idx()):
                 return ReadBuffState(self._context, ReadFractPartState)
-        
+
+            if ((self._context.get_full_idx() - self._context.get_long_part_start()) > 10) and \
+                (abs(self._context.get_num() - 0) < 1e-10):
+                raise WrongFormatException("nonsense value.")
+
         if self._context.get_full_idx() - self._context.get_start_idx() == 1:
             raise WrongFormatException(f"unknown number \"{('-' == self._context._int_sign) * '-'}.\"")
 

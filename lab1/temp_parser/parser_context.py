@@ -25,6 +25,8 @@ class ParseContext:
         self._is_input_finished = False     # was OS input buffer read completely
         self._is_numpart_empty = True       # was number part of token read completely
 
+        self._long_part_start = 0
+
     def reset(self) -> None:
         self._int_sign = 1
         self._int_part = 0.0
@@ -41,7 +43,7 @@ class ParseContext:
         self._last_chunk_sym = buff[-1]
         if self._buff[-1] == '\n':
             self._buff = self._buff[:-1]
-        if self._buff[-1] == '\r':
+        if (len(self._buff) != 0) and (self._buff[-1] == '\r'):
             self._buff = self._buff[:-1]
         self._chunks_cnt += 1
 
@@ -50,6 +52,12 @@ class ParseContext:
             return ''
         
         return self._last_chunk_sym
+    
+    def set_long_part_start(self) -> None:
+        self._long_part_start = self._idx
+
+    def get_long_part_start(self) -> int:
+        return self._long_part_start
 
     def is_input_finished(self) -> bool:
         return self._is_input_finished
